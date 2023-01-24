@@ -1,0 +1,251 @@
+<div class="grid">
+    <div class="col-12">
+
+		<div class="search-container" style="float: right;">
+			<input type="text" pInputText placeholder="Search.." [(ngModel)]="searchText" (keyup.enter)="search()">
+		</div>
+        <div class="card">
+    <h5 class="card-title">Resize</h5>
+
+        <div class="table-container">
+                <p-table [value]="customers3" scrollDirection="both" sortMode="multiple" [resizableColumns]="true" columnResizeMode="expand" [scrollable]="true" scrollHeight="400px" styleClass="mt-3" responsiveLayout="scroll">
+                    <ng-template pTemplate="header">
+                        <tr>
+                            <th pResizableColumn pSortableColumn="name" style="width:200px"><p-sortIcon field="name"></p-sortIcon>Name</th>
+                            <th pResizableColumn pSortableColumn="id" style="width:200px">Id<p-sortIcon field="id"></p-sortIcon></th>
+        
+						<th pResizableColumn pSortableColumn="date" style="width:200px">
+							Date <p-sortIcon field="date"></p-sortIcon>
+						</th>
+						<th pResizableColumn pSortableColumn="representative.name" style="width:200px">
+							<p-sortIcon field="representative.name"></p-sortIcon>Representative
+						</th>
+						<th pResizableColumn pSortableColumn="balance" style="width:200px" pFrozenColumn alignFrozen="right">
+							<p-sortIcon field="balance"></p-sortIcon>Balance
+						</th>
+					</tr>
+				</ng-template>
+				<ng-template pTemplate="body" let-customer>
+					<tr>
+						<td style="width:200px">{{customer.name}}</td>
+						<td style="width:200px">{{custom
+							<img [alt]="customer.representative.name" src="assets/demo/images/avatar/{{customer.representative.image}}" width="32" style="vertical-align: middle"/>
+							<span class="image-text ml-2">{{customer.representative.name}}</span>
+						</td>
+						<td style="width:200px" pFrozenColumn class="font-bold" alignFrozen="right">{{formatCurrency(customer.balance)}}</td>
+					</tr>
+				</ng-template>
+			</p-table>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+
+in ts 
+
+import { Component,OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Customer, Representative } from 'src/app/demo/api/customer';
+import { CustomerService } from 'src/app/demo/service/customer.service';
+import { Product } from 'src/app/demo/api/product';
+import { ProductService } from 'src/app/demo/service/product.service';
+import { Table } from 'primeng/table';
+import { MessageService, ConfirmationService } from 'primeng/api';
+import { SortEvent } from 'primeng/api';
+
+@Component({
+    templateUrl: './emptydemo.component.html'
+})
+export class EmptyDemoComponent {
+
+
+    customers1: Customer[] = [];
+
+    customers2: Customer[] = [];
+
+    customers3: Customer[] = [];
+
+    selectedCustomers1: Customer[] = [];
+
+    selectedCustomer: Customer = {};
+
+    representatives: Representative[] = [];
+
+    statuses: any[] = [];
+
+    products: Product[] = [];
+
+    // cols: any[];
+
+    rowGroupMetadata: any;
+
+  
+
+    activityValues: number[] = [0, 100];
+
+    isExpanded: boolean = false;
+
+    idFrozen: boolean = false;
+
+    loading: boolean = true;
+    
+
+    @ViewChild('filter') filter!: ElementRef;
+    sadikh: any=[];
+    
+
+    constructor(private customerService: CustomerService, private productService: ProductService) { }
+
+   
+
+    ngOnInit() {
+        this.customerService.getCustomersLarge().then(customers => {
+            this.customers1 = customers;
+            this.loading = false;
+
+            // @ts-ignore
+            this.customers1.forEach(customer => customer.date = new Date(customer.date));
+        });
+        this.sadikh = [
+            { field: 'code', header: 'Code' },
+            { field: 'name', header: 'Name' },
+            { field: 'category', header: 'Category' },
+            { field: 'quantity', header: 'Quantity' }
+        ];
+        this.customerService.getCustomersMedium().then(customers => this.customers2 = customers);
+        this.customerService.getCustomersLarge().then(customers => this.customers3 = customers);
+        this.productService.getProductsWithOrdersSmall().then(data => this.products = data);
+
+        this.representatives = [
+            { name: 'Amy Elsner', image: 'amyelsner.png' },
+            { name: 'Anna Fali', image: 'annafali.png' },
+            { name: 'Asiya Javayant', image: 'asiyajavayant.png' },
+            { name: 'Bernardo Dominic', image: 'bernardodominic.png' },
+            { name: 'Elwin Sharvill', image: 'elwinsharvill.png' },
+            { name: 'Ioni Bowcher', image: 'ionibowcher.png' },
+            { name: 'Ivan Magalhaes', image: 'ivanmagalhaes.png' },
+            { name: 'Onyama Limba', image: 'onyamalimba.png' },
+            { name: 'Stephen Shaw', image: 'stephenshaw.png' },
+            { name: 'XuXue Feng', image: 'xuxuefeng.png' }
+        ];
+
+        this.statuses = [
+            { label: 'Unqualified', value: 'unqualified' },
+            { label: 'Qualified', value: 'qualified' },
+            { label: 'New', value: 'new' },
+            { label: 'Negotiation', value: 'negotiation' },
+            { label: 'Renewal', value: 'renewal' },
+            { label: 'Proposal', value: 'proposal' }
+        ];
+    }
+    customSort(event: SortEvent) {
+       
+    }
+    onSort() {
+        this.updateRowGroupMetaData();
+    }
+
+    updateRowGroupMetaData() {
+        this.rowGroupMetadata = {};
+
+        if (this.customers3) {
+            for (let i = 0; i < this.customers3.length; i++) {
+                const rowData = this.customers3[i];
+                const representativeName = rowData?.representative?.name || '';
+
+                if (i === 0) {
+                    this.rowGroupMetadata[representativeName] = { index: 0, size: 1 };
+                }
+                else {
+                    const previousRowData = this.customers3[i - 1];
+                    const previousRowGroup = previousRowData?.representative?.name;
+                    if (representativeName === previousRowGroup) {
+                        this.rowGroupMetadata[representativeName].size++;
+                    }
+                    else {
+                        this.rowGroupMetadata[representativeName] = { index: i, size: 1 };
+                    }
+                }
+            }
+        }
+    }
+
+
+
+    clear(table: Table) {
+        table.clear();
+        this.filter.nativeElement.value = '';
+    }
+
+    formatCurrency(value: number) {
+        return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    }
+
+    searchText:any;
+
+    search() {
+        console.log(this.searchText);
+        // Perform search based on this.searchText
+    }
+
+    customers= [/*data for the table */];
+
+    
+    
+ }
+
+
+in module
+.
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { EmptyDemoRoutingModule } from './emptydemo-routing.module';
+import { EmptyDemoComponent } from './emptydemo.component';
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { ToggleButtonModule } from 'primeng/togglebutton';
+import { RippleModule } from 'primeng/ripple';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { DropdownModule } from 'primeng/dropdown';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { ToastModule } from 'primeng/toast';
+import { SliderModule } from 'primeng/slider';
+import { RatingModule } from 'primeng/rating';
+import { CalendarModule } from 'primeng/calendar';
+import { ContextMenuModule } from 'primeng/contextmenu';
+import { DialogModule } from 'primeng/dialog';
+import { FormsModule } from '@angular/forms';
+import { PaginatorModule } from 'primeng/paginator';
+
+
+
+@NgModule({
+    imports: [
+        CommonModule,
+        EmptyDemoRoutingModule,
+        TableModule,
+		RatingModule,
+		ButtonModule,
+		SliderModule,
+		InputTextModule,
+		ToggleButtonModule,
+		RippleModule,
+		MultiSelectModule,
+		DropdownModule,
+		ProgressBarModule,
+		ToastModule,
+		DialogModule,
+		ContextMenuModule,
+		CalendarModule,
+        FormsModule,
+		PaginatorModule
+    ],
+    declarations: [EmptyDemoComponent]
+})
+export class EmptyDemoModule { }
+
+
+
